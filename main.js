@@ -96,43 +96,82 @@ var Player = function() {
 
 };
 
-var Laser = function(x_1,y_1,x_2,y_2) {
-  this.x1 = x_1;
-  this.y1 = y_1;
+var Laser = function(direction, x_2, y_2) {
+  this.laser_direction = direction;
   this.x2 = x_2;
   this.y2 = y_2;
 
-  this.draw = function() {
-      ctx.beginPath();
-      ctx.moveTo(this.x1, this.y1);
-      ctx.lineTo(this.x2, this.y2);
-      ctx.strokeStyle = "#FF0000";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-  };
+  
 
-  this.collides = function(platforms,playerX, playerY) {
+  this.draw = function(platforms,playerX, playerY) {
     collision = false;
     dist = 0;
 
-    //Iterate thru positions of platforms
-    for(i = 0 ; i<platforms.length; i++){
-      
-      if (platfroms[i].x == playerX && platforms[i].y == playerY){
-        ctx.beginPath();
-        ctx.moveTo(this.x1, this.y1);
-        ctx.lineTo(this.x2, this.y2);
-        ctx.strokeStyle = "#FF0000";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-      
-    }
+    //Iterate thru positions of platforms and check for collisions
+    for(i = 0 ; i<platforms.length; i++){  
+      if (this.laser_direction == "down"){
+        if (playerX < (platforms[i].x + 50) && playerX > (platforms[i].x - 50) && platforms[i].y > playerY){
+          collision = true;
+        }
+      } else if (this.laser_direction == "right"){
+        if (playerY <= platforms[i].y+17/2 && playerY >= platforms[i].y-17/2  && platforms[i].x > playerX){
+          collision = true;
+        }
+      } else if (this.laser_direction == "left"){
+        if ((playerY <= platforms[i].y+17/2 && playerY >= platforms[i].y-17/2  && platforms[i].x < playerX)){
+          collision = true;
+        }
+      } else if (this.laser_direction == "down-left"){
+        x1 = playerX+30;
+        y1 = playerY;
+        m = (this.x2 - x1)/(this.y2 - y1);
+        c = (this.y2-this.x2)*m;
+        console.log("DL: " + m);
+        
 
+
+
+        // WRITE THIS OUT AND SEE IF IT CAN BE DONE ANOTHER WAY
+
+        //OTHERWISE GOOGLE A SOLUTION FOR LINE OF SIGHT IN A CANVAS
+
+
+
+
+
+      } else if (this.laser_direction == "down-right"){
+        x1 = playerX+30;
+        y1 = playerY;
+        m = (this.x2 - x1)/(this.y2 - y1);
+        console.log("DR: " + m);
+        c = (this.y2-this.x2)*m;
+        for(var x = x1; x<this.x2; x++){
+          y = m*x+c;
+          if (x < (platforms[i].x + 50) && x > (platforms[i].x - 50) && y <= (platforms[i].y+17/2) && y >= (platforms[i].y-17/2)){
+            collision = true;
+          }
+        }
+      }
+        //return Math.sqrt((y2 - playerY) * (y2 - playerY) + (x2 - playerX) * (x2 - playerX));
+        //have an array with closest in each direction, and make line snap to that platform
+
+      ctx.beginPath();
+      ctx.setLineDash([10, 10]);
+      ctx.moveTo(player.x+30, player.y+15);
+      ctx.lineTo(this.x2, this.y2);
+      if (collision){ 
+        ctx.strokeStyle = "#FF0000";
+      } else { 
+        ctx.strokeStyle = "#000000";
+      }
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      }
+
+    }
   }
 
-
-}
 
 player = new Player();
 
@@ -168,7 +207,16 @@ function Platform() {
       else if (this.type == 4 && this.state === 0) this.cy = 90;
       else if (this.type == 4 && this.state == 1) this.cy = 1000;
 
-      ctx.drawImage(image, this.cx, this.cy, this.cwidth, this.cheight, this.x, this.y, this.width, this.height);
+      ctx.drawImage(image, this.cx, this.cy, this.cwidth, this.cheight, this.x, this.y, this.width, this.height); //Comment Out for just lines for platforms
+      
+      /*ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.moveTo(this.x,this.y);
+      ctx.lineTo(this.x+this.width, this.y);
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 5;
+      ctx.stroke(); UNCOMMENT FOR LINES AS PLATFORMS, COMMENT OUT ABOVE*/
+
     } catch (e) {}
   };
 
@@ -499,11 +547,14 @@ function init() {
 
   function update() {
     lasers = new Array();
-    lasers.push(new Laser(player.x + 30, player.y+15,player.x + 200 , player.y+15)); //Left
-    lasers.push(new Laser(player.x+30, player.y+15,player.x - 150, player.y+15)); //Right
-    lasers.push(new Laser(player.x + 30, player.y+15,player.x + 30 , player.y+150)); //Down
-    lasers.push(new Laser(player.x+30, player.y+15,player.x - 130, player.y + 130)); //Down-Left
-    lasers.push(new Laser(player.x+30, player.y+15,player.x + 170, player.y+130)); //Down-Right
+    lasers.push(new Laser("down",player.x + 30 , player.y+170));
+    lasers.push(new Laser("right",player.x + 220, player.y+15));
+    lasers.push(new Laser("left",player.x - 170 , player.y+15));
+    lasers.push(new Laser("down-left",player.x - 150, player.y + 150));
+    lasers.push(new Laser("down-right",player.x + 190, player.y+150));
+
+    
+
 
     
     paintCanvas();
@@ -514,12 +565,13 @@ function init() {
     playerCalc();
 
     for (var i = 0; i<5; i++){
-      lasers[i].draw();
+      lasers[i].draw(platforms, player.x,player.y);
     }
     player.draw();
 
 
     base.draw();
+   // ctx.fillRect(200,300,5,5);
 
     updateScore();
   }
