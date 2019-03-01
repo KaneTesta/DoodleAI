@@ -110,47 +110,46 @@ var Laser = function(direction, x_2, y_2) {
     //Iterate thru positions of platforms and check for collisions
     for(i = 0 ; i<platforms.length; i++){  
       if (this.laser_direction == "down"){
-        if (playerX < (platforms[i].x + 50) && playerX > (platforms[i].x - 50) && platforms[i].y > playerY){
+        if (playerX < (platforms[i].x + 70) && playerX > (platforms[i].x) && platforms[i].y > playerY){
           collision = true;
         }
       } else if (this.laser_direction == "right"){
-        if (playerY <= platforms[i].y+17/2 && playerY >= platforms[i].y-17/2  && platforms[i].x > playerX){
+        if (playerY <= platforms[i].y+17 && playerY >= platforms[i].y  && platforms[i].x > playerX){
           collision = true;
         }
       } else if (this.laser_direction == "left"){
-        if ((playerY <= platforms[i].y+17/2 && playerY >= platforms[i].y-17/2  && platforms[i].x < playerX)){
+        if ((playerY <= platforms[i].y+17 && playerY >= platforms[i].y  && platforms[i].x < playerX)){
           collision = true;
         }
-      } else if (this.laser_direction == "down-left"){
+      } else {
         x1 = playerX+30;
         y1 = playerY;
         m = (this.x2 - x1)/(this.y2 - y1);
-        c = (this.y2-this.x2)*m;
-        console.log("DL: " + m);
-        
-
-
-
-        // WRITE THIS OUT AND SEE IF IT CAN BE DONE ANOTHER WAY
-
-        //OTHERWISE GOOGLE A SOLUTION FOR LINE OF SIGHT IN A CANVAS
-
-
-
-
-
-      } else if (this.laser_direction == "down-right"){
-        x1 = playerX+30;
-        y1 = playerY;
-        m = (this.x2 - x1)/(this.y2 - y1);
-        console.log("DR: " + m);
         c = (this.y2-this.x2)*m;
         for(var x = x1; x<this.x2; x++){
+          x3 = x1 - (x-x1);
           y = m*x+c;
-          if (x < (platforms[i].x + 50) && x > (platforms[i].x - 50) && y <= (platforms[i].y+17/2) && y >= (platforms[i].y-17/2)){
-            collision = true;
+          //ctx.fillRect(x,y,1,1); vision lines
+          //ctx.fillRect(x3,y,1,1);
+          if (this.laser_direction == "down-right"){
+            if (x < (platforms[i].x + 70) && x > (platforms[i].x) && y <= (platforms[i].y+17) && y >= (platforms[i].y)){
+              collision = true;
+            }
+          } 
+
+          if (this.laser_direction == "down-left" && i>0){
+            if (x3 < (platforms[i].x + 70) && x3 > (platforms[i].x) && y <= (platforms[i].y+17) && y >= (platforms[i].y)){
+              collision = true;        
+            }
           }
-        }
+
+        }                  
+      }
+    }
+
+      if (this.laser_direction == "down-left"){
+        this.x2 = player.x - 150;
+        this.y2 = player.y + 150;
       }
         //return Math.sqrt((y2 - playerY) * (y2 - playerY) + (x2 - playerX) * (x2 - playerX));
         //have an array with closest in each direction, and make line snap to that platform
@@ -167,7 +166,6 @@ var Laser = function(direction, x_2, y_2) {
       ctx.lineWidth = 2;
       ctx.stroke();
       
-      }
 
     }
   }
@@ -550,7 +548,7 @@ function init() {
     lasers.push(new Laser("down",player.x + 30 , player.y+170));
     lasers.push(new Laser("right",player.x + 220, player.y+15));
     lasers.push(new Laser("left",player.x - 170 , player.y+15));
-    lasers.push(new Laser("down-left",player.x - 150, player.y + 150));
+    lasers.push(new Laser("down-left",player.x + 190, player.y + 150));
     lasers.push(new Laser("down-right",player.x + 190, player.y+150));
 
     
