@@ -101,7 +101,36 @@ var Laser = function(direction, x_2, y_2) {
   this.x2 = x_2;
   this.y2 = y_2;
 
-  
+  //Draw the Nodes for the NN Inputes
+  this.drawNode = function(direction) {
+
+    if (direction == "right"){
+      ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.arc(25, 450, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+    } else if (direction == "left"){
+      ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.arc(25, 470, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+    } else if (direction == "down"){
+      ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.arc(25, 490, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+    } else if (direction == "down-right"){
+      ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.arc(25, 510, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+    } else if (direction == "down-left"){
+      ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.arc(25, 530, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+  }
 
   this.draw = function(platforms,playerX, playerY) {
     collision = false;
@@ -154,8 +183,17 @@ var Laser = function(direction, x_2, y_2) {
         this.x2 = player.x - 150;
         this.y2 = player.y + 150;
       }
-        //have an array with closest in each direction, and make line snap to that platform
-
+      
+      //Comment out to remove Neural Network
+      if (collision){ 
+        this.drawNode(this.laser_direction);
+        ctx.strokeStyle = "#FF0000";
+      } else { 
+        this.drawNode(this.laser_direction);
+        ctx.strokeStyle = "#000000";
+      }
+      
+      //Comment out to remove Laser Visions
       ctx.beginPath();
       ctx.setLineDash([10, 10]);
       ctx.moveTo(player.x+30, player.y+15);
