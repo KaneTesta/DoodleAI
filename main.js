@@ -106,6 +106,8 @@ var Laser = function(direction, x_2, y_2) {
   this.draw = function(platforms,playerX, playerY) {
     collision = false;
     dist = 0;
+    px = 0; //platform x
+    py = 0; //platform y
 
     //Iterate thru positions of platforms and check for collisions
     for(i = 0 ; i<platforms.length; i++){  
@@ -129,21 +131,22 @@ var Laser = function(direction, x_2, y_2) {
         for(var x = x1; x<this.x2; x++){
           x3 = x1 - (x-x1);
           y = m*x+c;
-          //ctx.fillRect(x,y,1,1); vision lines
-          //ctx.fillRect(x3,y,1,1);
           if (this.laser_direction == "down-right"){
             if (x < (platforms[i].x + 70) && x > (platforms[i].x) && y <= (platforms[i].y+17) && y >= (platforms[i].y)){
               collision = true;
             }
           } 
-
           if (this.laser_direction == "down-left" && i>0){
             if (x3 < (platforms[i].x + 70) && x3 > (platforms[i].x) && y <= (platforms[i].y+17) && y >= (platforms[i].y)){
-              collision = true;        
+              collision = true;
             }
           }
-
-        }                  
+        }            
+      }
+      if (collision) {
+        px = platforms[i].x;
+        py = platforms[i].y;
+        break;
       }
     }
 
@@ -151,7 +154,6 @@ var Laser = function(direction, x_2, y_2) {
         this.x2 = player.x - 150;
         this.y2 = player.y + 150;
       }
-        //return Math.sqrt((y2 - playerY) * (y2 - playerY) + (x2 - playerX) * (x2 - playerX));
         //have an array with closest in each direction, and make line snap to that platform
 
       ctx.beginPath();
@@ -165,6 +167,13 @@ var Laser = function(direction, x_2, y_2) {
       }
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      if (collision){ 
+        return Math.sqrt((py - playerY) * (py - playerY) + (px - playerX) * (px - playerX));
+      } else { 
+        return null;
+      }
+
       
 
     }
@@ -542,6 +551,7 @@ function init() {
   }
 
   //Function to update everything
+  platform_distance = new Array(5);
 
   function update() {
     lasers = new Array();
@@ -563,14 +573,12 @@ function init() {
     playerCalc();
 
     for (var i = 0; i<5; i++){
-      lasers[i].draw(platforms, player.x,player.y);
+      platform_distance[i] = lasers[i].draw(platforms, player.x,player.y);
     }
     player.draw();
 
 
     base.draw();
-   // ctx.fillRect(200,300,5,5);
-
     updateScore();
   }
 
