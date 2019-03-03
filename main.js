@@ -103,33 +103,20 @@ var Laser = function(direction, x_2, y_2) {
 
   //Draw the Nodes for the NN Inputes
   this.drawNode = function(direction) {
-
+    ctx.beginPath();
+    ctx.setLineDash([0, 0]);
     if (direction == "right"){
-      ctx.beginPath();
-      ctx.setLineDash([0, 0]);
       ctx.arc(25, 450, 5, 0, 2 * Math.PI);
-      ctx.stroke();
     } else if (direction == "left"){
-      ctx.beginPath();
-      ctx.setLineDash([0, 0]);
       ctx.arc(25, 470, 5, 0, 2 * Math.PI);
-      ctx.stroke();
     } else if (direction == "down"){
-      ctx.beginPath();
-      ctx.setLineDash([0, 0]);
       ctx.arc(25, 490, 5, 0, 2 * Math.PI);
-      ctx.stroke();
     } else if (direction == "down-right"){
-      ctx.beginPath();
-      ctx.setLineDash([0, 0]);
       ctx.arc(25, 510, 5, 0, 2 * Math.PI);
-      ctx.stroke();
     } else if (direction == "down-left"){
-      ctx.beginPath();
-      ctx.setLineDash([0, 0]);
       ctx.arc(25, 530, 5, 0, 2 * Math.PI);
-      ctx.stroke();
     }
+    ctx.stroke();
   }
 
   this.draw = function(platforms,playerX, playerY) {
