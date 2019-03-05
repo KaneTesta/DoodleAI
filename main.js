@@ -52,7 +52,32 @@ var Base = function() {
 var base = new Base();
 
 
+function gaussianRandom()
+{
+	var v1, v2, s;
 
+	do {
+		v1 = 2 * Math.random() - 1;
+		v2 = 2 * Math.random() - 1;
+		s = v1 * v1 + v2 * v2;
+	} while (s >= 1 || s == 0);
+
+	s = Math.sqrt((-2 * Math.log(s)) / s);
+
+	return v1 * s;
+}
+
+
+
+function mutate(x) {
+  if (Math.random(1) < 0.1) {
+    let offset = gaussianRandom() * 0.5;
+    let newx = x + offset;
+    return newx;
+  } else {
+    return x;
+  }
+}
 
 
 //-------------------------------------------------------  Player object -------------------------------------------------------------
@@ -78,20 +103,6 @@ var Player = function(brain) {
     this.x = width / 2 - this.width / 2;
     this.y = height;
 
-
-
-
-    /* Inputs = 5 time laser beams, Outputs = Left or Right (1)
-
-    In        Hidden       Out
-    ---       ------       ----
-    Down                   Move Left or Right
-    Left
-    Right
-    D-Left                 
-    D-Right
-    */
-
     this.score = 0;
     this.gen = 0;
     this.fitness = 0;
@@ -101,8 +112,10 @@ var Player = function(brain) {
     this.platform_distance[1] = [null,null];
     this.platform_distance[2] = [null,null];
 
-    if (brain){
-      this.brain = brain.copy();
+    if (brain instanceof NeuralNetwork){
+      console.log("Called");
+      this.brain = brain.copy()
+      this.brain.mutate(mutate);
     } else {
       this.brain = new NeuralNetwork(8,4,2);
     }
@@ -128,8 +141,12 @@ var Player = function(brain) {
   }
 
   //Mutate Brain
-  this.mutate = function(){
-    this.brain.mutate(0.1);
+  this.mutatePlayer = function(){
+
+  }
+
+  this.copy = function() {
+    return new Player(this.brain);
   }
 
   //Function to draw it
@@ -436,8 +453,8 @@ function init() {
       if(key == 32) {
         if(firstRun === true)
           init();
-        else 
-          reset();
+        else {}
+          //reset();
       }
     };
 
@@ -619,6 +636,7 @@ function init() {
     genText.innerHTML = "Generation: " + player.gen;
   }
 
+
   function gameOver() {
     platforms.forEach(function(p, i) {
       p.y -= 12;
@@ -636,6 +654,8 @@ function init() {
 
       var tweet = document.getElementById("tweetBtn");
       var facebook = document.getElementById("fbBtn");
+      setTimeout(function(){reset();},5000);
+
       
     }
   }
@@ -643,7 +663,7 @@ function init() {
 //-------------------------------------------------------  FUNCTION UPDATE -------------------------------------------------------------
 
   maxScore = 0;
-  savedPlayer = new Array();
+  savedPlayer = player.copy();
 
   function update() {
     player.lasers[0] = new Laser("down",player.x + 30 , player.y+170);
@@ -655,7 +675,7 @@ function init() {
     
     if (player.score > maxScore) {
       maxScore = player.score;
-      savedPlayer = player;
+      savedPlayer = player.copy();
     }
 
     
@@ -693,6 +713,7 @@ function reset() {
   hideGoMenu();
   showScore();
   player.isDead = false;
+  player = nextGeneration(maxScore, player);
   
   flag = 0;
   position = 0;
@@ -700,7 +721,6 @@ function reset() {
 
   base = new Base();
   Spring = new spring();
-  player = new Player();
   platform_broken_substitute = new Platform_broken_substitute();
 
   platforms = [];
@@ -782,8 +802,8 @@ function playerJump() {
         init();
         firstRun = false;
       }
-      else 
-        reset();
+      else {}
+        //reset();
     }
   };
 
