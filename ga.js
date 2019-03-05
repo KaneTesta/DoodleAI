@@ -10,7 +10,7 @@ function pickOne() {
     newPlayer = new Player(child.brain);
     newPlayer.gen = gen1+1;
     console.log(newPlayer.gen);
-    //newPlayer.mutate();
+    newPlayer.mutate();
     console.log("mutated");
     return newPlayer;
 }
