@@ -26,7 +26,7 @@ var platforms = [],
   menuloop, broken = 0,
   dir, score = 0, firstRun = true;
 
-//Base object
+//----------------------------------------------------BASE OBJECT ---------------------------------------------------------------------------//
 var Base = function() {
   this.height = 5;
   this.width = width;
@@ -51,7 +51,11 @@ var Base = function() {
 
 var base = new Base();
 
-//Player object
+
+
+
+
+//-------------------------------------------------------  Player object -------------------------------------------------------------
 var Player = function() {
   this.vy = 11;
   this.vx = 0;
@@ -95,6 +99,13 @@ var Player = function() {
   };
 
 };
+
+player = new Player();
+
+
+
+//-------------------------------------------------------  Laser Vision object -------------------------------------------------------------
+
 
 var Laser = function(direction, x_2, y_2) {
   this.laser_direction = direction;
@@ -205,10 +216,10 @@ var Laser = function(direction, x_2, y_2) {
   }
 
 
-player = new Player();
 
 
-//Platform class
+
+//-------------------------------------------------------  Platform object -------------------------------------------------------------
 
 function Platform() {
   this.width = 70;
@@ -283,7 +294,7 @@ for (var i = 0; i < platformCount; i++) {
   platforms.push(new Platform());
 }
 
-//Broken platform object
+//------------------------------------------------------- Broken, Platform object -------------------------------------------------------------
 var Platform_broken_substitute = function() {
   this.height = 30;
   this.width = 70;
@@ -309,7 +320,9 @@ var Platform_broken_substitute = function() {
 
 var platform_broken_substitute = new Platform_broken_substitute();
 
-//Spring Class
+
+
+//-------------------------------------------------------  Spring object -------------------------------------------------------------
 var spring = function() {
   this.x = 0;
   this.y = 0;
@@ -336,6 +349,11 @@ var spring = function() {
 };
 
 var Spring = new spring();
+
+
+
+//-------------------------------------------------------  GAME CALCULATIONS -------------------------------------------------------------
+
 
 function init() {
   //Variables for the game
@@ -575,7 +593,8 @@ function init() {
     }
   }
 
-  //Function to update everything
+//-------------------------------------------------------  FUNCTION UPDATE -------------------------------------------------------------
+
   platform_distance = new Array(5);
 
   function update() {
@@ -592,9 +611,7 @@ function init() {
     
     paintCanvas();
     platformCalc();
-
     springCalc();
-
     playerCalc();
 
 
