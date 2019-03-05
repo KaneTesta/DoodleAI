@@ -56,27 +56,81 @@ var base = new Base();
 
 
 //-------------------------------------------------------  Player object -------------------------------------------------------------
-var Player = function() {
-  this.vy = 11;
-  this.vx = 0;
+var Player = function(brain) {
+    this.vy = 11;
+    this.vx = 0;
 
-  this.isMovingLeft = false;
-  this.isMovingRight = false;
-  this.isDead = false;
+    this.isMovingLeft = false;
+    this.isMovingRight = false;
+    this.isDead = false;
 
-  this.width = 55;
-  this.height = 40;
+    this.width = 55;
+    this.height = 40;
 
-  //Sprite clipping
-  this.cx = 0;
-  this.cy = 0;
-  this.cwidth = 110;
-  this.cheight = 80;
+    //Sprite clipping
+    this.cx = 0;
+    this.cy = 0;
+    this.cwidth = 110;
+    this.cheight = 80;
 
-  this.dir = "left";
+    this.dir = "left";
 
-  this.x = width / 2 - this.width / 2;
-  this.y = height;
+    this.x = width / 2 - this.width / 2;
+    this.y = height;
+
+
+
+
+    /* Inputs = 5 time laser beams, Outputs = Left or Right (1)
+
+    In        Hidden       Out
+    ---       ------       ----
+    Down                   Move Left or Right
+    Left
+    Right
+    D-Left                 
+    D-Right
+    */
+
+    this.score = 0;
+    this.gen = 0;
+    this.fitness = 0;
+    this.lasers = new Array();
+    this.platform_distance = new Array(3);
+    this.platform_distance[0] = [null,null];
+    this.platform_distance[1] = [null,null];
+    this.platform_distance[2] = [null,null];
+
+    if (brain){
+      this.brain = brain.copy();
+    } else {
+      this.brain = new NeuralNetwork(8,4,2);
+    }
+  
+
+  //Function to Think
+  this.think = function() {
+  
+    var inputs = [this.x/width, this.y/height,
+                  this.platform_distance[0][0],this.platform_distance[0][1],
+                  this.platform_distance[1][0],this.platform_distance[1][1],
+                  this.platform_distance[2][0],this.platform_distance[2][1]];
+    var output = this.brain.predict(inputs);
+    if (output[0] >output[1]){
+      dir = "left";
+      player.isMovingLeft = true;
+      player.isMovingRight = false;
+    } else {
+      dir = "right";
+      player.isMovingLeft = false;
+      player.isMovingRight = true;
+    }
+  }
+
+  //Mutate Brain
+  this.mutate = function(){
+    this.brain.mutate(0.1);
+  }
 
   //Function to draw it
   this.draw = function() {
@@ -116,11 +170,7 @@ var Laser = function(direction, x_2, y_2) {
   this.drawNode = function(direction) {
     ctx.beginPath();
     ctx.setLineDash([0, 0]);
-    if (direction == "right"){
-      ctx.arc(25, 450, 5, 0, 2 * Math.PI);
-    } else if (direction == "left"){
-      ctx.arc(25, 470, 5, 0, 2 * Math.PI);
-    } else if (direction == "down"){
+    if (direction == "down"){
       ctx.arc(25, 490, 5, 0, 2 * Math.PI);
     } else if (direction == "down-right"){
       ctx.arc(25, 510, 5, 0, 2 * Math.PI);
@@ -140,14 +190,6 @@ var Laser = function(direction, x_2, y_2) {
     for(i = 0 ; i<platforms.length; i++){  
       if (this.laser_direction == "down"){
         if (playerX < (platforms[i].x + 70) && playerX > (platforms[i].x) && platforms[i].y > playerY){
-          collision = true;
-        }
-      } else if (this.laser_direction == "right"){
-        if (playerY <= platforms[i].y+17 && playerY >= platforms[i].y  && platforms[i].x > playerX){
-          collision = true;
-        }
-      } else if (this.laser_direction == "left"){
-        if ((playerY <= platforms[i].y+17 && playerY >= platforms[i].y  && platforms[i].x < playerX)){
           collision = true;
         }
       } else {
@@ -205,9 +247,9 @@ var Laser = function(direction, x_2, y_2) {
       ctx.stroke();
 
       if (collision){ 
-        return Math.sqrt((py - playerY) * (py - playerY) + (px - playerX) * (px - playerX));
+        return [(px - playerX)/width,(py - playerY)/height];
       } else { 
-        return null;
+        return [null,null];
       }
 
       
@@ -428,11 +470,11 @@ function init() {
       if (player.vx > 0) player.vx -= 0.1;
     }
 
-    // Speed limits!
-    if(player.vx > 8)
-      player.vx = 8;
-    else if(player.vx < -8)
-      player.vx = -8;
+    // Speed limits! SHOULD BE 8 IF REPLICATING REAL GAME
+    if(player.vx > 4)
+      player.vx = 4;
+    else if(player.vx < -4)
+      player.vx = -4;
 
     //console.log(player.vx);
     
@@ -572,6 +614,11 @@ function init() {
     scoreText.innerHTML = score;
   }
 
+  function updateGen(player){
+    var genText = document.getElementById("generation");
+    genText.innerHTML = "Generation: " + player.gen;
+  }
+
   function gameOver() {
     platforms.forEach(function(p, i) {
       p.y -= 12;
@@ -595,18 +642,21 @@ function init() {
 
 //-------------------------------------------------------  FUNCTION UPDATE -------------------------------------------------------------
 
-  platform_distance = new Array(5);
+  maxScore = 0;
+  savedPlayer = new Array();
 
   function update() {
-    lasers = new Array();
-    lasers.push(new Laser("down",player.x + 30 , player.y+170));
-    lasers.push(new Laser("right",player.x + 220, player.y+15));
-    lasers.push(new Laser("left",player.x - 170 , player.y+15));
-    lasers.push(new Laser("down-left",player.x + 190, player.y + 150));
-    lasers.push(new Laser("down-right",player.x + 190, player.y+150));
+    player.lasers[0] = new Laser("down",player.x + 30 , player.y+170);
+    player.lasers[1] = new Laser("down-left",player.x + 190, player.y + 150);
+    player.lasers[2] = new Laser("down-right",player.x + 190, player.y+150);
+    player.platform_distance = new Array(3);
+    player.score++;
 
     
-
+    if (player.score > maxScore) {
+      maxScore = player.score;
+      savedPlayer = player;
+    }
 
     
     paintCanvas();
@@ -615,16 +665,16 @@ function init() {
     playerCalc();
 
 
-    for (var i = 0; i<5; i++){
-      platform_distance[i] = lasers[i].draw(platforms, player.x,player.y);
+    for (var i = 0; i<3; i++){
+      player.platform_distance[i] = player.lasers[i].draw(platforms, player.x,player.y);
     }
     player.draw();
+    player.think();
     base.draw();
 
-    //trigger(lasers);
-
-
     updateScore();
+    updateGen(player);
+
   }
 
   menuLoop = function(){return;};
@@ -649,8 +699,8 @@ function reset() {
   score = 0;
 
   base = new Base();
-  player = new Player();
   Spring = new spring();
+  player = new Player();
   platform_broken_substitute = new Platform_broken_substitute();
 
   platforms = [];
@@ -720,9 +770,11 @@ function playerJump() {
     if (key == 37) {
       dir = "left";
       player.isMovingLeft = true;
+
     } else if (key == 39) {
       dir = "right";
       player.isMovingRight = true;
+
     }
   
     if(key == 32) {
@@ -746,23 +798,6 @@ function playerJump() {
       player.isMovingRight = false;
     }
   };
-
-  //Accelerations produces when the user hold the keys
-  if (player.isMovingLeft === true) {
-    player.x += player.vx;
-    player.vx -= 0.15;
-  } else {
-    player.x += player.vx;
-    if (player.vx < 0) player.vx += 0.1;
-  }
-
-  if (player.isMovingRight === true) {
-    player.x += player.vx;
-    player.vx += 0.15;
-  } else {
-    player.x += player.vx;
-    if (player.vx > 0) player.vx -= 0.1;
-  }
 
   //Jump the player when it hits the base
   if ((player.y + player.height) > base.y && base.y < height) player.jump();
