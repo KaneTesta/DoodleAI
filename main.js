@@ -103,7 +103,6 @@ var Player = function(brain,generation) {
     this.x = width / 2 - this.width / 2;
     this.y = height;
 
-    this.score = 0;
     this.gen = generation;
     this.fitness = 0;
     this.lasers = new Array();
@@ -629,6 +628,8 @@ function init() {
   function updateGen(player){
     var genText = document.getElementById("generation");
     genText.innerHTML = "Generation: " + player.gen;
+    var genText = document.getElementById("HighScore");
+    genText.innerHTML = "High Score: " + maxScore;
   }
 
 
@@ -665,11 +666,11 @@ function init() {
     player.lasers[1] = new Laser("down-left",player.x + 190, player.y + 150);
     player.lasers[2] = new Laser("down-right",player.x + 190, player.y+150);
     player.platform_distance = new Array(3);
-    player.score++;
+
 
     
-    if (player.score > maxScore) {
-      maxScore = player.score;
+    if (score > maxScore) {
+      maxScore = score;
       savedPlayer = player.copy();
     }
 
