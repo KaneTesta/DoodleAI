@@ -1,10 +1,9 @@
 function nextGeneration(maxScore, player) {
-    return pickOne(maxScore, player);
+    return pickOne(player);
 }
 
-function pickOne() {
-    gen1 = player.gen;
-    newPlayer = new Player(player.brain);
-    newPlayer.gen = gen1+1;
-    return newPlayer;
+function pickOne(player) {
+    var num = player.gen;
+    num+=1;
+    return new Player(player.brain,num);
 }

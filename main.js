@@ -81,7 +81,7 @@ function mutate(x) {
 
 
 //-------------------------------------------------------  Player object -------------------------------------------------------------
-var Player = function(brain) {
+var Player = function(brain,generation) {
     this.vy = 11;
     this.vx = 0;
 
@@ -104,7 +104,7 @@ var Player = function(brain) {
     this.y = height;
 
     this.score = 0;
-    this.gen = 0;
+    this.gen = generation;
     this.fitness = 0;
     this.lasers = new Array();
     this.platform_distance = new Array(3);
@@ -112,8 +112,8 @@ var Player = function(brain) {
     this.platform_distance[1] = [null,null];
     this.platform_distance[2] = [null,null];
 
-    if (brain instanceof NeuralNetwork){
-      console.log("Called");
+
+    if (brain instanceof NeuralNetwork && this.gen>0){
       this.brain = brain.copy()
       this.brain.mutate(mutate);
     } else {
@@ -140,13 +140,8 @@ var Player = function(brain) {
     }
   }
 
-  //Mutate Brain
-  this.mutatePlayer = function(){
-
-  }
-
   this.copy = function() {
-    return new Player(this.brain);
+    return new Player(this.brain, this.gen);
   }
 
   //Function to draw it
@@ -171,7 +166,7 @@ var Player = function(brain) {
 
 };
 
-player = new Player();
+player = new Player(new NeuralNetwork(8,4,2),0);
 
 
 
@@ -654,7 +649,7 @@ function init() {
 
       var tweet = document.getElementById("tweetBtn");
       var facebook = document.getElementById("fbBtn");
-      setTimeout(function(){reset();},5000);
+      setTimeout(function(){reset();},100);
 
       
     }
@@ -678,7 +673,6 @@ function init() {
       savedPlayer = player.copy();
     }
 
-    
     paintCanvas();
     platformCalc();
     springCalc();
