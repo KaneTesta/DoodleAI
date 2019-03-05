@@ -708,7 +708,7 @@ function reset() {
   hideGoMenu();
   showScore();
   player.isDead = false;
-  player = nextGeneration(maxScore, player);
+  player = nextGeneration(maxScore, savedPlayer);
   
   flag = 0;
   position = 0;
