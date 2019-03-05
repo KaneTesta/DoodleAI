@@ -597,13 +597,16 @@ function init() {
 
     playerCalc();
 
+
     for (var i = 0; i<5; i++){
       platform_distance[i] = lasers[i].draw(platforms, player.x,player.y);
     }
     player.draw();
-
-
     base.draw();
+
+    //trigger(lasers);
+
+
     updateScore();
   }
 
