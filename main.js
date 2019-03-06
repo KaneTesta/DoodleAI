@@ -673,15 +673,8 @@ function init() {
     } 
     else if(player.y < height / 2) flag = 1;
     else if(player.y + player.height > height) {
-      showGoMenu();
-      hideScore();
       player.isDead = "lol";
-
-      var tweet = document.getElementById("tweetBtn");
-      var facebook = document.getElementById("fbBtn");
       setTimeout(function(){reset();},100);
-
-      
     }
   }
 
@@ -734,7 +727,6 @@ function init() {
 }
 
 function reset() {
-  hideGoMenu();
   showScore();
   player.isDead = false;
   player = nextGeneration(maxScore, savedPlayer);
@@ -757,23 +749,6 @@ function reset() {
 function hideMenu() {
   var menu = document.getElementById("mainMenu");
   menu.style.zIndex = -1;
-}
-
-//Shows the game over menu
-function showGoMenu() {
-  var menu = document.getElementById("gameOverMenu");
-  menu.style.zIndex = 1;
-  menu.style.visibility = "visible";
-
-  var scoreText = document.getElementById("go_score");
-  scoreText.innerHTML = "You scored " + score + " points!";
-}
-
-//Hides the game over menu
-function hideGoMenu() {
-  var menu = document.getElementById("gameOverMenu");
-  menu.style.zIndex = -1;
-  menu.style.visibility = "hidden";
 }
 
 //Show ScoreBoard
