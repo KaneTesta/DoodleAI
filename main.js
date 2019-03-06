@@ -24,7 +24,8 @@ var platforms = [],
   animloop,
   flag = 0,
   menuloop, broken = 0,
-  dir, score = 0, firstRun = true;
+  dir;// score = 0, 
+  firstRun = true;
 
 //----------------------------------------------------BASE OBJECT ---------------------------------------------------------------------------//
 var Base = function() {
@@ -38,6 +39,7 @@ var Base = function() {
   this.cheight = 5;
 
   this.moved = 0;
+  this.score = 0;
 
   this.x = 0;
   this.y = height - this.height;
@@ -99,6 +101,7 @@ var Player = function(brain,generation) {
     this.cheight = 80;
 
     this.dir = "left";
+    this.score = 0;
 
     this.x = width / 2 - this.width / 2;
     this.y = height;
@@ -351,11 +354,13 @@ function Platform() {
   //3: Breakable (Go through)
   //4: Vanishable 
   //Setting the probability of which type of platforms should be shown at what score
-  if (score >= 5000) this.types = [2, 3, 3, 3, 4, 4, 4, 4];
-  else if (score >= 2000 && score < 5000) this.types = [2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4];
-  else if (score >= 1000 && score < 2000) this.types = [2, 2, 2, 3, 3, 3, 3, 3];
-  else if (score >= 500 && score < 1000) this.types = [1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
-  else if (score >= 100 && score < 500) this.types = [1, 1, 1, 1, 2, 2];
+  
+  //NEEDS TO BE LEADING PLAYER INDEX
+  if (player.score >= 5000) this.types = [2, 3, 3, 3, 4, 4, 4, 4];
+  else if (player.score >= 2000 && player.score < 5000) this.types = [2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4];
+  else if (player.score >= 1000 && player.score < 2000) this.types = [2, 2, 2, 3, 3, 3, 3, 3];
+  else if (player.score >= 500 && player.score < 1000) this.types = [1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
+  else if (player.score >= 100 && player.score < 500) this.types = [1, 1, 1, 1, 2, 2];
   else this.types = [1];
 
   this.type = this.types[Math.floor(Math.random() * this.types.length)];
@@ -557,7 +562,7 @@ function init() {
         player.vy += gravity;
       }
 
-      score++;
+      player.score++;
     }
 
     //Make the player jump when it collides with platforms
@@ -651,7 +656,7 @@ function init() {
 
   function updateScore() {
     var scoreText = document.getElementById("score");
-    scoreText.innerHTML = score;
+    scoreText.innerHTML = player.score;
   }
 
   function updateGen(player){
@@ -678,10 +683,21 @@ function init() {
     }
   }
 
+  function bestPlayerAlive(){
+    hiScore = 0;
+    index = 0;
+    for (var i = 0; i<total; i++){
+      if (player[i].score>hiScore)
+        index = i;
+        hiScore = player[i].score;
+    }
+  }
+
 //-------------------------------------------------------  FUNCTION UPDATE -------------------------------------------------------------
 
   maxScore = 0;
   savedPlayer = player.copy();
+  liveBestPlayerIndex = 0;
 
   function update() {
     player.lasers[0] = new Laser("down",player.x + 30 , player.y+170);
@@ -691,11 +707,12 @@ function init() {
 
 
     
-    if (score > maxScore) {
-      maxScore = score;
+    if (player.score > maxScore) {
+      maxScore = player.score;
       savedPlayer = player.copy();
     }
 
+    //liveBestPlayerIndex = bestPlayerAlive();
     paintCanvas();
     platformCalc();
     springCalc();
@@ -721,7 +738,6 @@ function init() {
   };
 
   animloop();
-
   hideMenu();
   showScore();
 }
@@ -729,11 +745,11 @@ function init() {
 function reset() {
   showScore();
   player.isDead = false;
-  player = nextGeneration(maxScore, savedPlayer);
+  player = nextGeneration(savedPlayer);
   
   flag = 0;
   position = 0;
-  score = 0;
+  //score = 0;
 
   base = new Base();
   Spring = new spring();
