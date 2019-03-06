@@ -128,20 +128,48 @@ var Player = function(brain,generation) {
                   this.platform_distance[1][0],this.platform_distance[1][1],
                   this.platform_distance[2][0],this.platform_distance[2][1]];
     var output = this.brain.predict(inputs);
+      
+    
+    ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.strokeStyle = "#000000";
+      ctx.arc(50, 500, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.strokeStyle = "#000000";
+      ctx.arc(50, 520, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+
     if (output[0] >output[1]){
       dir = "left";
       player.isMovingLeft = true;
       player.isMovingRight = false;
+
+      ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.strokeStyle = "#FF0000";
+      ctx.arc(50, 500, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+
     } else {
       dir = "right";
       player.isMovingLeft = false;
       player.isMovingRight = true;
+
+      ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.strokeStyle = "#FF0000";
+      ctx.arc(50, 520, 5, 0, 2 * Math.PI);
+      ctx.stroke();
     }
   }
 
   this.copy = function() {
     return new Player(this.brain, this.gen);
   }
+
 
   //Function to draw it
   this.draw = function() {
@@ -154,6 +182,7 @@ var Player = function(brain,generation) {
       ctx.drawImage(image, this.cx, this.cy, this.cwidth, this.cheight, this.x, this.y, this.width, this.height);
     } catch (e) {}
   };
+
 
   this.jump = function() {
     this.vy = -8;
