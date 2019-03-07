@@ -18,7 +18,8 @@ canvas.height = height;
 //Variables for game
 var platforms = [],
   image = document.getElementById("sprite"),
-  player, platformCount = 10,
+  platformCount = 10,
+  generation = 0, 
   position = 0,
   gravity = 0.2,
   animloop,
@@ -83,7 +84,7 @@ function mutate(x) {
 
 
 //-------------------------------------------------------  Player object -------------------------------------------------------------
-var Player = function(brain,generation) {
+var Player = function(brain) {
     this.vy = 11;
     this.vx = 0;
 
@@ -106,7 +107,6 @@ var Player = function(brain,generation) {
     this.x = width / 2 - this.width / 2;
     this.y = height;
 
-    this.gen = generation;
     this.fitness = 0;
     this.lasers = new Array();
     this.platform_distance = new Array(3);
@@ -115,7 +115,7 @@ var Player = function(brain,generation) {
     this.platform_distance[2] = [null,null];
 
 
-    if (brain instanceof NeuralNetwork && this.gen>0){
+    if (brain instanceof NeuralNetwork){
       this.brain = brain.copy()
       this.brain.mutate(mutate);
     } else {
@@ -133,7 +133,7 @@ var Player = function(brain,generation) {
     var output = this.brain.predict(inputs);
       
     
-    ctx.beginPath();
+    /*ctx.beginPath();
       ctx.setLineDash([0, 0]);
       ctx.strokeStyle = "#000000";
       ctx.arc(50, 500, 5, 0, 2 * Math.PI);
@@ -143,34 +143,34 @@ var Player = function(brain,generation) {
       ctx.setLineDash([0, 0]);
       ctx.strokeStyle = "#000000";
       ctx.arc(50, 520, 5, 0, 2 * Math.PI);
-      ctx.stroke();
+      ctx.stroke();*/
 
-    if (output[0] >output[1]){
-      dir = "left";
-      player.isMovingLeft = true;
-      player.isMovingRight = false;
+    if (output[0] > output[1]){
+      this.dir = "left";
+      this.isMovingLeft = true;
+      this.isMovingRight = false;
 
-      ctx.beginPath();
+      /*ctx.beginPath();
       ctx.setLineDash([0, 0]);
       ctx.strokeStyle = "#FF0000";
       ctx.arc(50, 500, 5, 0, 2 * Math.PI);
-      ctx.stroke();
+      ctx.stroke();*/
 
     } else {
-      dir = "right";
-      player.isMovingLeft = false;
-      player.isMovingRight = true;
+      this.dir = "right";
+      this.isMovingLeft = false;
+      this.isMovingRight = true;
 
-      ctx.beginPath();
+      /*ctx.beginPath();
       ctx.setLineDash([0, 0]);
       ctx.strokeStyle = "#FF0000";
       ctx.arc(50, 520, 5, 0, 2 * Math.PI);
-      ctx.stroke();
+      ctx.stroke();*/
     }
   }
 
   this.copy = function() {
-    return new Player(this.brain, this.gen);
+    return new Player(this.brain);
   }
 
 
@@ -181,7 +181,6 @@ var Player = function(brain,generation) {
       else if (this.dir == "left") this.cy = 201;
       else if (this.dir == "right_land") this.cy = 289;
       else if (this.dir == "left_land") this.cy = 371;
-
       ctx.drawImage(image, this.cx, this.cy, this.cwidth, this.cheight, this.x, this.y, this.width, this.height);
     } catch (e) {}
   };
@@ -197,7 +196,16 @@ var Player = function(brain,generation) {
 
 };
 
-player = new Player(new NeuralNetwork(8,4,2),0);
+total = 1;
+player = [];
+allPlayers = [];
+aliveBestPlayerIndex = 0;
+
+for (var i = 0; i<total;i++){
+  newPlayer = new Player();
+  allPlayers[i] = newPlayer;
+  player[i] = newPlayer;
+}
 
 
 
@@ -263,23 +271,23 @@ var Laser = function(direction, x_2, y_2) {
     }
 
       if (this.laser_direction == "down-left"){
-        this.x2 = player.x - 150;
-        this.y2 = player.y + 150;
+        this.x2 = playerX - 150;
+        this.y2 = playerY + 150;
       }
       
       //Comment out to remove Neural Network
-      if (collision){ 
-        this.drawNode(this.laser_direction);
+      /*if (collision){ 
+        //this.drawNode(this.laser_direction);
         ctx.strokeStyle = "#FF0000";
       } else { 
-        this.drawNode(this.laser_direction);
+        //this.drawNode(this.laser_direction);
         ctx.strokeStyle = "#000000";
-      }
+      }*/
       
       //Comment out to remove Laser Visions
-      ctx.beginPath();
+      /*ctx.beginPath();
       ctx.setLineDash([10, 10]);
-      ctx.moveTo(player.x+30, player.y+15);
+      ctx.moveTo(playerX+30, playerY+15);
       ctx.lineTo(this.x2, this.y2);
       if (collision){ 
         ctx.strokeStyle = "#FF0000";
@@ -287,7 +295,7 @@ var Laser = function(direction, x_2, y_2) {
         ctx.strokeStyle = "#000000";
       }
       ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.stroke();*/
 
       if (collision){ 
         return [(px - playerX)/width,(py - playerY)/height];
@@ -356,11 +364,11 @@ function Platform() {
   //Setting the probability of which type of platforms should be shown at what score
   
   //NEEDS TO BE LEADING PLAYER INDEX
-  if (player.score >= 5000) this.types = [2, 3, 3, 3, 4, 4, 4, 4];
-  else if (player.score >= 2000 && player.score < 5000) this.types = [2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4];
-  else if (player.score >= 1000 && player.score < 2000) this.types = [2, 2, 2, 3, 3, 3, 3, 3];
-  else if (player.score >= 500 && player.score < 1000) this.types = [1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
-  else if (player.score >= 100 && player.score < 500) this.types = [1, 1, 1, 1, 2, 2];
+  if (player[aliveBestPlayerIndex].score >= 5000) this.types = [2, 3, 3, 3, 4, 4, 4, 4];
+  else if (player[aliveBestPlayerIndex].score >= 2000 && player[aliveBestPlayerIndex].score < 5000) this.types = [2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4];
+  else if (player[aliveBestPlayerIndex].score >= 1000 && player[aliveBestPlayerIndex].score < 2000) this.types = [2, 2, 2, 3, 3, 3, 3, 3];
+  else if (player[aliveBestPlayerIndex].score >= 500 && player[aliveBestPlayerIndex].score < 1000) this.types = [1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
+  else if (player[aliveBestPlayerIndex].score >= 100 && player[aliveBestPlayerIndex].score < 500) this.types = [1, 1, 1, 1, 2, 2];
   else this.types = [1];
 
   this.type = this.types[Math.floor(Math.random() * this.types.length)];
@@ -443,6 +451,7 @@ var Spring = new spring();
 
 
 function init() {
+
   //Variables for the game
   var dir = "left",
     jumpCount = 0;
@@ -457,94 +466,61 @@ function init() {
 
   //Player related calculations and functions
 
-  function playerCalc() {
-    if (dir == "left") {
-      player.dir = "left";
-      if (player.vy < -7 && player.vy > -15) player.dir = "left_land";
-    } else if (dir == "right") {
-      player.dir = "right";
-      if (player.vy < -7 && player.vy > -15) player.dir = "right_land";
+  function playerCalc(i) {
+    if (player[i].dir == "left") {
+      player[i].dir = "left";
+      if (player[i].vy < -7 && player[i].vy > -15) player[i].dir = "left_land";
+    } else if (player[i].dir == "right") {
+      player[i].dir = "right";
+      if (player[i].vy < -7 && player[i].vy > -15) player[i].dir = "right_land";
     }
-
-    //Adding keyboard controls
-    document.onkeydown = function(e) {
-      var key = e.keyCode;
-      
-      if (key == 37) {
-        dir = "left";
-        player.isMovingLeft = true;
-      } else if (key == 39) {
-        dir = "right";
-        player.isMovingRight = true;
-      }
-      
-      if(key == 32) {
-        if(firstRun === true)
-          init();
-        else {}
-          //reset();
-      }
-    };
-
-    document.onkeyup = function(e) {
-      var key = e.keyCode;
-    
-      if (key == 37) {
-        dir = "left";
-        player.isMovingLeft = false;
-      } else if (key == 39) {
-        dir = "right";
-        player.isMovingRight = false;
-      }
-    };
 
     //Accelerations produces when the user hold the keys
-    if (player.isMovingLeft === true) {
-      player.x += player.vx;
-      player.vx -= 0.15;
+    if (player[i].isMovingLeft === true) {
+      player[i].x += player[i].vx;
+      player[i].vx -= 0.15;
     } else {
-      player.x += player.vx;
-      if (player.vx < 0) player.vx += 0.1;
+      player[i].x += player[i].vx;
+      if (player[i].vx < 0) player[i].vx += 0.1;
     }
 
-    if (player.isMovingRight === true) {
-      player.x += player.vx;
-      player.vx += 0.15;
+    if (player[i].isMovingRight === true) {
+      player[i].x += player[i].vx;
+      player[i].vx += 0.15;
     } else {
-      player.x += player.vx;
-      if (player.vx > 0) player.vx -= 0.1;
+      player[i].x += player[i].vx;
+      if (player[i].vx > 0) player[i].vx -= 0.1;
     }
 
     // Speed limits! SHOULD BE 8 IF REPLICATING REAL GAME
-    if(player.vx > 4)
-      player.vx = 4;
-    else if(player.vx < -4)
-      player.vx = -4;
+    if(player[i].vx > 4)
+      player[i].vx = 4;
+    else if(player[i].vx < -4)
+      player[i].vx = -4;
 
-    //console.log(player.vx);
     
     //Jump the player when it hits the base
-    if ((player.y + player.height) > base.y && base.y < height) player.jump();
+    if ((player[i].y + player[i].height) > base.y && base.y < height) player[i].jump();
 
     //Gameover if it hits the bottom 
-    if (base.y > height && (player.y + player.height) > height && player.isDead != "lol") player.isDead = true;
+    if (base.y > height && (player[i].y + player[i].height) > height && player[i].isDead != "lol") player[i].isDead = true;
 
     //Make the player move through walls
-    if (player.x > width) player.x = 0 - player.width;
-    else if (player.x < 0 - player.width) player.x = width;
+    if (player[i].x > width) player[i].x = 0 - player[i].width;
+    else if (player[i].x < 0 - player[i].width) player[i].x = width;
 
     //Movement of player affected by gravity
-    if (player.y >= (height / 2) - (player.height / 2)) {
-      player.y += player.vy;
-      player.vy += gravity;
+    if (player[i].y >= (height / 2) - (player[i].height / 2)) {
+      player[i].y += player[i].vy;
+      player[i].vy += gravity;
     }
 
     //When the player reaches half height, move the platforms to create the illusion of scrolling and recreate the platforms that are out of viewport...
     else {
       platforms.forEach(function(p, i) {
 
-        if (player.vy < 0) {
-          p.y -= player.vy;
+        if (player[aliveBestPlayerIndex].vy < 0) {
+          p.y -= player[aliveBestPlayerIndex].vy;
         }
 
         if (p.y > height) {
@@ -554,21 +530,18 @@ function init() {
 
       });
 
-      base.y -= player.vy;
-      player.vy += gravity;
+      base.y -= player[i].vy;
+      player[i].vy += gravity;
 
-      if (player.vy >= 0) {
-        player.y += player.vy;
-        player.vy += gravity;
+      if (player[i].vy >= 0) {
+        player[i].y += player[i].vy;
+        player[i].vy += gravity;
       }
 
-      player.score++;
+      player[i].score++;
     }
-
     //Make the player jump when it collides with platforms
-    collides();
-
-    if (player.isDead === true) gameOver();
+    collides(i);
   }
 
   //Spring algorithms
@@ -621,114 +594,91 @@ function init() {
     if (subs.y > height) subs.appearance = false;
   }
 
-  function lineCollision() {
-
-
-  }
-
-  function collides() {
+  function collides(j) {
     //Platforms
     platforms.forEach(function(p, i) {
-      if (player.vy > 0 && p.state === 0 && (player.x + 15 < p.x + p.width) && (player.x + player.width - 15 > p.x) && (player.y + player.height > p.y) && (player.y + player.height < p.y + p.height)) {
+      if (player[j].vy > 0 && p.state === 0 && (player[j].x + 15 < p.x + p.width) && (player[j].x + player[j].width - 15 > p.x) && (player[j].y + player[j].height > p.y) && (player[j].y + player[j].height < p.y + p.height)) {
 
         if (p.type == 3 && p.flag === 0) {
           p.flag = 1;
           jumpCount = 0;
           return;
         } else if (p.type == 4 && p.state === 0) {
-          player.jump();
+          player[j].jump();
           p.state = 1;
         } else if (p.flag == 1) return;
         else {
-          player.jump();
+          player[j].jump();
         }
       }
     });
 
     //Springs
     var s = Spring;
-    if (player.vy > 0 && (s.state === 0) && (player.x + 15 < s.x + s.width) && (player.x + player.width - 15 > s.x) && (player.y + player.height > s.y) && (player.y + player.height < s.y + s.height)) {
+    if (player[j].vy > 0 && (s.state === 0) && (player[j].x + 15 < s.x + s.width) && (player[j].x + player[j].width - 15 > s.x) && (player[j].y + player[j].height > s.y) && (player[j].y + player[j].height < s.y + s.height)) {
       s.state = 1;
-      player.jumpHigh();
+      player[j].jumpHigh();
     }
 
   }
 
   function updateScore() {
     var scoreText = document.getElementById("score");
-    scoreText.innerHTML = player.score;
+    scoreText.innerHTML = player[aliveBestPlayerIndex].score;
   }
 
-  function updateGen(player){
+  function updateGen(generation){
     var genText = document.getElementById("generation");
-    genText.innerHTML = "Generation: " + player.gen;
-    var genText = document.getElementById("HighScore");
-    genText.innerHTML = "High Score: " + maxScore;
+    genText.innerHTML = "Generation: " + generation;
   }
 
 
   function gameOver() {
-    platforms.forEach(function(p, i) {
-      p.y -= 12;
-    });
-
-    if(player.y > height/2 && flag === 0) {
-      player.y -= 8;
-      player.vy = 0;
-    } 
-    else if(player.y < height / 2) flag = 1;
-    else if(player.y + player.height > height) {
-      player.isDead = "lol";
       setTimeout(function(){reset();},100);
-    }
-  }
-
-  function bestPlayerAlive(){
-    hiScore = 0;
-    index = 0;
-    for (var i = 0; i<total; i++){
-      if (player[i].score>hiScore)
-        index = i;
-        hiScore = player[i].score;
-    }
+      generation++;
+      aliveBestPlayerIndex = 0;
   }
 
 //-------------------------------------------------------  FUNCTION UPDATE -------------------------------------------------------------
 
-  maxScore = 0;
-  savedPlayer = player.copy();
-  liveBestPlayerIndex = 0;
-
+  alive = total;
   function update() {
-    player.lasers[0] = new Laser("down",player.x + 30 , player.y+170);
-    player.lasers[1] = new Laser("down-left",player.x + 190, player.y + 150);
-    player.lasers[2] = new Laser("down-right",player.x + 190, player.y+150);
-    player.platform_distance = new Array(3);
-
-
-    
-    if (player.score > maxScore) {
-      maxScore = player.score;
-      savedPlayer = player.copy();
-    }
-
-    //liveBestPlayerIndex = bestPlayerAlive();
+    maxScore = 0;
+    deadCount = 0;
     paintCanvas();
     platformCalc();
     springCalc();
-    playerCalc();
-
-
-    for (var i = 0; i<3; i++){
-      player.platform_distance[i] = player.lasers[i].draw(platforms, player.x,player.y);
-    }
-    player.draw();
-    player.think();
     base.draw();
 
-    updateScore();
-    updateGen(player);
+    for (var i = 0; i<alive; i++){
+      player[i].lasers[0] = new Laser("down",player[i].x + 30 , player[i].y+170);
+      player[i].lasers[1] = new Laser("down-left",player[i].x + 190, player[i].y + 150);
+      player[i].lasers[2] = new Laser("down-right",player[i].x + 190, player[i].y+150);
+    
+      if (player[i].score > maxScore) {
+        maxScore = player[i].score;
+        aliveBestPlayerIndex = i;
+      }
 
+      if (player[i].isDead == true){
+        alive-=1;
+      }
+
+      if (alive == 0){
+        player = [];
+        gameOver();
+      } else {
+      
+        for (var j = 0; j<3; j++){
+            player[i].platform_distance[i] = player[i].lasers[j].draw(platforms, player[i].x,player[i].y);
+            player[i].think();
+            playerCalc(i);
+            player[i].draw();
+        }
+        updateScore();
+        updateGen(generation);
+      }
+    }
   }
 
   menuLoop = function(){return;};
@@ -744,13 +694,15 @@ function init() {
 
 function reset() {
   showScore();
-  player.isDead = false;
-  player = nextGeneration(savedPlayer);
+
+  ng = nextGeneration(player, allPlayers);
+  player = ng[0];
+  allPlayers = ng[1];
+  aliveBestPlayerIndex = 0;
   
   flag = 0;
   position = 0;
-  //score = 0;
-
+  alive = total;
   base = new Base();
   Spring = new spring();
   platform_broken_substitute = new Platform_broken_substitute();
@@ -779,74 +731,41 @@ function hideScore() {
   menu.style.zIndex = -1;
 }
 
-function playerJump() {
-  player.y += player.vy;
-  player.vy += gravity;
+function playerJump(i) {
+  player[i].y += player[i].vy;
+  player[i].vy += gravity;
 
-  if (player.vy > 0 && 
-    (player.x + 15 < 260) && 
-    (player.x + player.width - 15 > 155) && 
-    (player.y + player.height > 475) && 
-    (player.y + player.height < 500))
-    player.jump();
+  if (player[i].vy > 0 && 
+    (player[i].x + 15 < 260) && 
+    (player[i].x + player[i].width - 15 > 155) && 
+    (player[i].y + player[i].height > 475) && 
+    (player[i].y + player[i].height < 500))
+    player[i].jump();
 
   if (dir == "left") {
-    player.dir = "left";
-    if (player.vy < -7 && player.vy > -15) player.dir = "left_land";
+    player[i].dir = "left";
+    if (player[i].vy < -7 && player[i].vy > -15) player[i].dir = "left_land";
   } else if (dir == "right") {
-    player.dir = "right";
-    if (player.vy < -7 && player.vy > -15) player.dir = "right_land";
+    player[i].dir = "right";
+    if (player[i].vy < -7 && player[i].vy > -15) player[i].dir = "right_land";
   }
 
-  //Adding keyboard controls
-  document.onkeydown = function(e) {
-    var key = e.keyCode;
-
-    if (key == 37) {
-      dir = "left";
-      player.isMovingLeft = true;
-
-    } else if (key == 39) {
-      dir = "right";
-      player.isMovingRight = true;
-
-    }
-  
-    if(key == 32) {
-      if(firstRun === true) {
-        init();
-        firstRun = false;
-      }
-      else {}
-        //reset();
-    }
-  };
-
-  document.onkeyup = function(e) {
-    var key = e.keyCode;
-
-    if (key == 37) {
-      dir = "left";
-      player.isMovingLeft = false;
-    } else if (key == 39) {
-      dir = "right";
-      player.isMovingRight = false;
-    }
-  };
 
   //Jump the player when it hits the base
-  if ((player.y + player.height) > base.y && base.y < height) player.jump();
+  if ((player[i].y + player[i].height) > base.y && base.y < height) player[i].jump();
 
   //Make the player move through walls
-  if (player.x > width) player.x = 0 - player.width;
-  else if (player.x < 0 - player.width) player.x = width;
+  if (player[i].x > width) player[i].x = 0 - player[i].width;
+  else if (player[i].x < 0 - player[i].width) player[i].x = width;
 
-  player.draw();
+  player[i].draw();
 }
 
 function update() {
   ctx.clearRect(0, 0, width, height);
-  playerJump();
+  for (var i = 0; i<total;i++){
+    playerJump(i);
+  }
 }   
 
 menuLoop = function() {
