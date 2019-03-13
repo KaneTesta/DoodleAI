@@ -6,7 +6,7 @@ window.requestAnimFrame = (function() {
   };
 })();
 
-var canvas = document.getElementById('canvas'),
+var canvas = document.getElementById('canvas1'),
   ctx = canvas.getContext('2d');
 
 var width = 422,
@@ -88,6 +88,9 @@ var Player = function(brain) {
     this.vy = 11;
     this.vx = 0;
 
+    this.lastBounced = [];
+    this.startCount = false;
+
     this.isMovingLeft = false;
     this.isMovingRight = false;
     this.isDead = false;
@@ -109,17 +112,19 @@ var Player = function(brain) {
 
     this.fitness = 0;
     this.lasers = new Array();
-    this.platform_distance = new Array(3);
+    this.platform_distance = new Array(5);
     this.platform_distance[0] = [null,null];
     this.platform_distance[1] = [null,null];
     this.platform_distance[2] = [null,null];
+    this.platform_distance[3] = [null,null];
+    this.platform_distance[4] = [null,null];
 
 
     if (brain instanceof NeuralNetwork){
       this.brain = brain.copy()
       this.brain.mutate(mutate);
     } else {
-      this.brain = new NeuralNetwork(8,4,2);
+      this.brain = new NeuralNetwork(7,5,3);
     }
   
 
@@ -127,9 +132,12 @@ var Player = function(brain) {
   this.think = function() {
   
     var inputs = [this.x/width, this.y/height,
-                  this.platform_distance[0][0],this.platform_distance[0][1],
-                  this.platform_distance[1][0],this.platform_distance[1][1],
-                  this.platform_distance[2][0],this.platform_distance[2][1]];
+                  this.platform_distance[0][0],//this.platform_distance[0][1],
+                  this.platform_distance[1][0],//this.platform_distance[1][1],
+                  this.platform_distance[2][0],//this.platform_distance[2][1],
+                  //this.platform_distance[3][0],//this.platform_distance[3][1],
+                  //this.platform_distance[4][0],//this.platform_distance[4][1],
+                  this.vx, this.vy];
     var output = this.brain.predict(inputs);
       
     
@@ -145,7 +153,7 @@ var Player = function(brain) {
       ctx.arc(50, 520, 5, 0, 2 * Math.PI);
       ctx.stroke();*/
 
-    if (output[0] > output[1]){
+    if (output[0] > output[1] && output[0] > output[2]){
       this.dir = "left";
       this.isMovingLeft = true;
       this.isMovingRight = false;
@@ -156,6 +164,15 @@ var Player = function(brain) {
       ctx.arc(50, 500, 5, 0, 2 * Math.PI);
       ctx.stroke();*/
 
+    } else if (output[3] > output[1] && output[3] > output[2]){
+      this.isMovingLeft = false;
+      this.isMovingRight = false;
+
+      /*ctx.beginPath();
+      ctx.setLineDash([0, 0]);
+      ctx.strokeStyle = "#FF0000";
+      ctx.arc(50, 520, 5, 0, 2 * Math.PI);
+      ctx.stroke();*/
     } else {
       this.dir = "right";
       this.isMovingLeft = false;
@@ -203,7 +220,7 @@ aliveBestPlayerIndex = 0;
 
 for (var i = 0; i<total;i++){
   newPlayer = new Player();
-  allPlayers[i] = newPlayer;
+  allPlayers.push(newPlayer);
   player[i] = newPlayer;
 }
 
@@ -242,6 +259,15 @@ var Laser = function(direction, x_2, y_2) {
       if (this.laser_direction == "down"){
         if (playerX < (platforms[i].x + 70) && playerX > (platforms[i].x) && platforms[i].y > playerY){
           collision = true;
+          
+        }
+      } else if (this.laser_direction == "right"){
+          if (playerY <= platforms[i].y+17/2 && playerY >= platforms[i].y-17/2  && platforms[i].x > playerX){
+            collision = true;
+        }
+      } else if (this.laser_direction == "left"){
+          if ((playerY <= platforms[i].y+17 && playerY >= platforms[i].y  && platforms[i].x < playerX)){
+            collision = true;
         }
       } else {
         x1 = playerX+30;
@@ -493,14 +519,17 @@ function init() {
     }
 
     // Speed limits! SHOULD BE 8 IF REPLICATING REAL GAME
-    if(player[i].vx > 4)
-      player[i].vx = 4;
-    else if(player[i].vx < -4)
-      player[i].vx = -4;
+    if(player[i].vx > 1)
+      player[i].vx = 1;
+    else if(player[i].vx < -1)
+      player[i].vx = -1;
 
     
     //Jump the player when it hits the base
-    if ((player[i].y + player[i].height) > base.y && base.y < height) player[i].jump();
+    if ((player[i].y + player[i].height) > base.y && base.y < height) {
+      player[i].jump();
+      player[i].lastBounced.push(base.y);
+    }
 
     //Gameover if it hits the bottom 
     if (base.y > height && (player[i].y + player[i].height) > height && player[i].isDead != "lol") player[i].isDead = true;
@@ -538,7 +567,9 @@ function init() {
         player[i].vy += gravity;
       }
 
-      player[i].score++;
+      if(player[i].startCount==true){
+        player[i].score++;
+      }
     }
     //Make the player jump when it collides with platforms
     collides(i);
@@ -598,17 +629,19 @@ function init() {
     //Platforms
     platforms.forEach(function(p, i) {
       if (player[j].vy > 0 && p.state === 0 && (player[j].x + 15 < p.x + p.width) && (player[j].x + player[j].width - 15 > p.x) && (player[j].y + player[j].height > p.y) && (player[j].y + player[j].height < p.y + p.height)) {
-
+        player[j].lastBounced.push(p.y);
         if (p.type == 3 && p.flag === 0) {
           p.flag = 1;
           jumpCount = 0;
           return;
         } else if (p.type == 4 && p.state === 0) {
           player[j].jump();
+          if (!player[j].startCount) player[j].startCount = true;
           p.state = 1;
         } else if (p.flag == 1) return;
         else {
           player[j].jump();
+          if (!player[j].startCount) player[j].startCount = true;
         }
       }
     });
@@ -645,6 +678,7 @@ function init() {
   function update() {
     maxScore = 0;
     deadCount = 0;
+    last = 0;
     paintCanvas();
     platformCalc();
     springCalc();
@@ -654,6 +688,8 @@ function init() {
       player[i].lasers[0] = new Laser("down",player[i].x + 30 , player[i].y+170);
       player[i].lasers[1] = new Laser("down-left",player[i].x + 190, player[i].y + 150);
       player[i].lasers[2] = new Laser("down-right",player[i].x + 190, player[i].y+150);
+      player[i].lasers[3] = new Laser("right",player.x + 220, player.y+15);
+      player[i].lasers[4] = new Laser("left",player.x - 170 , player.y+15);
     
       if (player[i].score > maxScore) {
         maxScore = player[i].score;
@@ -669,14 +705,27 @@ function init() {
         gameOver();
       } else {
       
-        for (var j = 0; j<3; j++){
+        for (var j = 0; j<5; j++){
             player[i].platform_distance[i] = player[i].lasers[j].draw(platforms, player[i].x,player[i].y);
             player[i].think();
             playerCalc(i);
-            player[i].draw();
         }
+        player[i].draw();
         updateScore();
         updateGen(generation);
+
+        for (var k = 0; k<player[i].lastBounced.length; k++){
+          if (k==0){
+            last = player[i].lastBounced[0];
+          }
+          if (player[i].lastBounced[k] != last){
+            player[i].lastBounced = [];
+          } else if (player[i].lastBounced[k] == last && k == player[i].lastBounced.length-1 && k>20){
+            gameOver();
+          }
+        }
+
+
       }
     }
   }
@@ -697,7 +746,7 @@ function reset() {
 
   ng = nextGeneration(player, allPlayers);
   player = ng[0];
-  allPlayers = ng[1];
+  allPlayers.push(ng[1]);
   aliveBestPlayerIndex = 0;
   
   flag = 0;
@@ -752,13 +801,15 @@ function playerJump(i) {
 
 
   //Jump the player when it hits the base
-  if ((player[i].y + player[i].height) > base.y && base.y < height) player[i].jump();
+  if ((player[i].y + player[i].height) > base.y && base.y < height) {
+    player[i].jump();
+    player[i].lastBounced.push(base.y);
+  }
 
   //Make the player move through walls
   if (player[i].x > width) player[i].x = 0 - player[i].width;
   else if (player[i].x < 0 - player[i].width) player[i].x = width;
 
-  player[i].draw();
 }
 
 function update() {

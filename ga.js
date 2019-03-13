@@ -5,13 +5,6 @@ function nextGeneration(player, allPlayers) {
     return [player, allPlayers];
   }
 
-function pickOne(player) {
-    var num = player.gen;
-    num+=1;
-    return new Player(player.brain,num);
-}
-
-
   // Generate a new population of players
 function generate(oldPlayers) {
     var newPlayers = [];
