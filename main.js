@@ -113,35 +113,33 @@ var Player = function(brain) {
     this.fitness = 0;
     this.lasers = new Array();
     this.platform_distance = new Array(5);
-    this.platform_distance[0] = [null,null];
-    this.platform_distance[1] = [null,null];
-    this.platform_distance[2] = [null,null];
-    this.platform_distance[3] = [null,null];
-    this.platform_distance[4] = [null,null];
+    this.platform_distance[0] = [null];
+    this.platform_distance[1] = [null];
+    this.platform_distance[2] = [null];
+    this.platform_distance[3] = [null];
+    this.platform_distance[4] = [null];
 
 
     if (brain instanceof NeuralNetwork){
       this.brain = brain.copy()
       this.brain.mutate(mutate);
     } else {
-      this.brain = new NeuralNetwork(7,5,3);
+      this.brain = new NeuralNetwork(5,10,3);
     }
   
 
   //Function to Think
   this.think = function() {
-  
-    var inputs = [this.x/width, this.y/height,
-                  this.platform_distance[0][0],//this.platform_distance[0][1],
-                  this.platform_distance[1][0],//this.platform_distance[1][1],
-                  this.platform_distance[2][0],//this.platform_distance[2][1],
-                  //this.platform_distance[3][0],//this.platform_distance[3][1],
-                  //this.platform_distance[4][0],//this.platform_distance[4][1],
-                  this.vx, this.vy];
+    var inputs = [this.platform_distance[0],
+                  this.platform_distance[1],
+                  this.platform_distance[2],
+                  this.platform_distance[3],
+                  this.platform_distance[4]]
+                  //this.vx, this.vy];
     var output = this.brain.predict(inputs);
       
     
-    /*ctx.beginPath();
+      /*ctx.beginPath();
       ctx.setLineDash([0, 0]);
       ctx.strokeStyle = "#000000";
       ctx.arc(50, 500, 5, 0, 2 * Math.PI);
@@ -259,15 +257,17 @@ var Laser = function(direction, x_2, y_2) {
       if (this.laser_direction == "down"){
         if (playerX < (platforms[i].x + 70) && playerX > (platforms[i].x) && platforms[i].y > playerY){
           collision = true;
-          
+          player[0].platform_distance[0] = Math.sqrt((Math.pow(platforms[i].x-playerX,2))+(Math.pow(platforms[i].y-playerY,2)));
         }
       } else if (this.laser_direction == "right"){
           if (playerY <= platforms[i].y+17/2 && playerY >= platforms[i].y-17/2  && platforms[i].x > playerX){
             collision = true;
+            player[0].platform_distance[1] = Math.sqrt((Math.pow(platforms[i].x-playerX,2))+(Math.pow(platforms[i].y-playerY,2)));
         }
       } else if (this.laser_direction == "left"){
           if ((playerY <= platforms[i].y+17 && playerY >= platforms[i].y  && platforms[i].x < playerX)){
             collision = true;
+            player[0].platform_distance[2] = Math.sqrt((Math.pow(platforms[i].x-playerX,2))+(Math.pow(platforms[i].y-playerY,2)));;
         }
       } else {
         x1 = playerX+30;
@@ -280,11 +280,13 @@ var Laser = function(direction, x_2, y_2) {
           if (this.laser_direction == "down-right"){
             if (x < (platforms[i].x + 70) && x > (platforms[i].x) && y <= (platforms[i].y+17) && y >= (platforms[i].y)){
               collision = true;
+              player[0].platform_distance[3] = Math.sqrt((Math.pow(platforms[i].x-playerX,2))+(Math.pow(platforms[i].y-playerY,2)));;
             }
           } 
           if (this.laser_direction == "down-left" && i>0){
             if (x3 < (platforms[i].x + 70) && x3 > (platforms[i].x) && y <= (platforms[i].y+17) && y >= (platforms[i].y)){
               collision = true;
+              player[0].platform_distance[4] = Math.sqrt((Math.pow(platforms[i].x-playerX,2))+(Math.pow(platforms[i].y-playerY,2)));;
             }
           }
         }            
@@ -302,16 +304,16 @@ var Laser = function(direction, x_2, y_2) {
       }
       
       //Comment out to remove Neural Network
-      /*if (collision){ 
-        //this.drawNode(this.laser_direction);
+      if (collision){ 
+        this.drawNode(this.laser_direction);
         ctx.strokeStyle = "#FF0000";
       } else { 
-        //this.drawNode(this.laser_direction);
+        this.drawNode(this.laser_direction);
         ctx.strokeStyle = "#000000";
-      }*/
+      }
       
       //Comment out to remove Laser Visions
-      /*ctx.beginPath();
+      ctx.beginPath();
       ctx.setLineDash([10, 10]);
       ctx.moveTo(playerX+30, playerY+15);
       ctx.lineTo(this.x2, this.y2);
@@ -321,7 +323,7 @@ var Laser = function(direction, x_2, y_2) {
         ctx.strokeStyle = "#000000";
       }
       ctx.lineWidth = 2;
-      ctx.stroke();*/
+      ctx.stroke();
 
       if (collision){ 
         return [(px - playerX)/width,(py - playerY)/height];
@@ -377,7 +379,7 @@ function Platform() {
       ctx.lineTo(this.x+this.width, this.y);
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 5;
-      ctx.stroke(); UNCOMMENT FOR LINES AS PLATFORMS, COMMENT OUT ABOVE*/
+      ctx.stroke(); //UNCOMMENT FOR LINES AS PLATFORMS, COMMENT OUT ABOVE*/
 
     } catch (e) {}
   };
@@ -685,11 +687,17 @@ function init() {
     base.draw();
 
     for (var i = 0; i<alive; i++){
+
+      for (var j = 0; j<5;j++){
+        player[0].platform_distance[j] = 0;
+      }
+
       player[i].lasers[0] = new Laser("down",player[i].x + 30 , player[i].y+170);
       player[i].lasers[1] = new Laser("down-left",player[i].x + 190, player[i].y + 150);
       player[i].lasers[2] = new Laser("down-right",player[i].x + 190, player[i].y+150);
       player[i].lasers[3] = new Laser("right",player.x + 220, player.y+15);
       player[i].lasers[4] = new Laser("left",player.x - 170 , player.y+15);
+
     
       if (player[i].score > maxScore) {
         maxScore = player[i].score;
@@ -706,7 +714,7 @@ function init() {
       } else {
       
         for (var j = 0; j<5; j++){
-            player[i].platform_distance[i] = player[i].lasers[j].draw(platforms, player[i].x,player[i].y);
+            player[i].lasers[j].draw(platforms, player[i].x,player[i].y); //Draw lasers
             player[i].think();
             playerCalc(i);
         }
